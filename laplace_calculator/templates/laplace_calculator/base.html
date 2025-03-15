@@ -1,0 +1,81 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es" class="light">
+<head>
+    <meta charset="UTF-8">
+    <title>LaplaceCalc</title>
+    <link rel="stylesheet" href="{% static 'css/styles.min.css' %}">
+    <!-- Incluir MathJax para renderizar matemáticas -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <!-- Incluir el CDN de Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Incluir el CDN de Lucide para los íconos -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <!-- Incluir scripts -->
+    <script src="{% static 'js/init.js' %}" defer></script>
+    <script src="{% static 'js/scripts.js' %}" defer></script>
+</head>
+<body class="bg-gray-50 text-gray-800 dark:bg-gray-900 dark:text-white">
+    <!-- Pasar datos del contexto como elementos ocultos -->
+    {% if plot_data %}
+        {{ plot_data|json_script:"plot-data" }}
+    {% else %}
+        <script type="application/json" id="plot-data" style="display: none;">
+            null
+        </script>
+    {% endif %}
+    <script type="application/json" id="range-t-min-value" style="display: none;">
+        {{ range_t_min|default:-10 }}
+    </script>
+    <script type="application/json" id="range-t-max-value" style="display: none;">
+        {{ range_t_max|default:10 }}
+    </script>
+    <script type="application/json" id="range-y-min-value" style="display: none;">
+        {{ range_y_min|default:-5 }}
+    </script>
+    <script type="application/json" id="range-y-max-value" style="display: none;">
+        {{ range_y_max|default:5 }}
+    </script>
+
+    <nav class="bg-indigo-600 text-white shadow-lg p-4 dark:bg-gray-800">
+        <div class="flex items-center">
+            <div class="font-bold text-xl mr-6">LaplaceCalc</div>
+            <a href="{% url 'laplace_calculator:calculator' %}" class="px-3 py-2 rounded-md hover:bg-indigo-700 dark:hover:bg-gray-700 {% if request.path == '/calculator/' %}bg-indigo-700 dark:bg-gray-700{% endif %}">Calculadora</a>
+            <a href="{% url 'laplace_calculator:graph' %}" class="px-3 py-2 rounded-md hover:bg-indigo-700 dark:hover:bg-gray-700 {% if request.path == '/graph/' %}bg-indigo-700 dark:bg-gray-700{% endif %}">Gráficas</a>
+            <button id="dark-mode-toggle" class="ml-auto p-2 rounded-full hover:bg-indigo-700 dark:hover:bg-gray-700">
+                <span id="dark-mode-icon">🌙</span>
+            </button>
+        </div>
+    </nav>
+    {% if request.path == '/calculator/' %}
+    <div class="bg-indigo-500 py-3 px-4 shadow-md dark:bg-indigo-900">
+        <div class="relative inline-block">
+            <button id="dropdown-toggle" class="flex items-center space-x-2 bg-white hover:bg-gray-50 px-4 py-2 rounded-md shadow transition-colors duration-200 dark:bg-gray-800 dark:hover:bg-gray-700">
+                <span class="text-gray-800 dark:text-white" id="dropdown-label">
+                    {% if calculation_type == 'directa' %}
+                        Calcular Transformada Directa
+                    {% elif calculation_type == 'inversa' %}
+                        Calcular Transformada Inversa
+                    {% else %}
+                        Calcular Transformada Directa
+                    {% endif %}
+                </span>
+                <i data-lucide="chevron-down" class="w-5 h-5 text-gray-600 dark:text-gray-400"></i>
+            </button>
+            <div id="dropdown-menu" class="hidden absolute top-12 left-0 bg-white border-gray-200 shadow-lg rounded-md border w-64 z-10 dark:bg-gray-800 dark:border-gray-700">
+                <div class="p-3 hover:bg-gray-100 cursor-pointer dark:hover:bg-gray-700 {% if calculation_type == 'directa' %}bg-gray-100 dark:bg-gray-700{% endif %}" data-value="directa">
+                    Calcular Transformada Directa
+                </div>
+                <div class="p-3 hover:bg-gray-100 cursor-pointer dark:hover:bg-gray-700 {% if calculation_type == 'inversa' %}bg-gray-100 dark:bg-gray-700{% endif %}" data-value="inversa">
+                    Calcular Transformada Inversa
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    <div class="p-4">
+        {% block content %}{% endblock %}
+    </div>
+</body>
+</html>
