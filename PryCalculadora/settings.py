@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-5^af4%v+58deqi#rq)$8j!)o8i&=vtrl52-#$si!=_5%$u4eua
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["prycalculadora.onrender.com", "localhost", "127.0.0.1"]
 
 
 # Application definition
