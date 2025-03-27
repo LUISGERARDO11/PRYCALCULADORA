@@ -1,0 +1,129 @@
+{% extends 'laplace_calculator/base.html' %}
+{% block content %}
+<div class="flex gap-6">
+    <!-- Panel de entrada (RK4) -->
+    <div class="w-full bg-white rounded-lg shadow-md border border-gray-200 p-4 dark:bg-gray-800 dark:border-gray-700">
+        <h2 class="text-lg font-bold mb-2 dark:text-white flex items-center">
+            <i data-lucide="calculator" class="w-4 h-4 mr-2 text-indigo-500 dark:text-indigo-400"></i>
+            Predicción de Demanda con RK4
+        </h2>
+        <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">
+            Ingrese los parámetros para resolver la ecuación diferencial \( \frac{dP}{dt} = rP + A\sin\left(\frac{2\pi}{T}t + \phi\right) \) usando el método Runge-Kutta de orden 4 (RK4).
+        </p>
+        <form method="post" id="rk4-form" class="mb-6">
+            {% csrf_token %}
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="text-sm text-gray-600 dark:text-gray-400">r (tasa de crecimiento):</label>
+                    <input type="text" name="r" value="{{ r }}" class="w-full p-2 rounded border dark:bg-gray-700 dark:text-white" placeholder="Ej: 0.0498">
+                </div>
+                <div>
+                    <label class="text-sm text-gray-600 dark:text-gray-400">A (amplitud):</label>
+                    <input type="text" name="A" value="{{ A }}" class="w-full p-2 rounded border dark:bg-gray-700 dark:text-white" placeholder="Ej: 10.23">
+                </div>
+                <div>
+                    <label class="text-sm text-gray-600 dark:text-gray-400">T (período):</label>
+                    <input type="text" name="T" value="{{ T }}" class="w-full p-2 rounded border dark:bg-gray-700 dark:text-white" placeholder="Ej: 12">
+                </div>
+                <div>
+                    <label class="text-sm text-gray-600 dark:text-gray-400">φ (fase):</label>
+                    <input type="text" name="phi" value="{{ phi }}" class="w-full p-2 rounded border dark:bg-gray-700 dark:text-white" placeholder="Ej: 9.51">
+                </div>
+                <div>
+                    <label class="text-sm text-gray-600 dark:text-gray-400">P0 (condición inicial):</label>
+                    <input type="text" name="P0" value="{{ P0 }}" class="w-full p-2 rounded border dark:bg-gray-700 dark:text-white" placeholder="Ej: 43.64">
+                </div>
+                <div>
+                    <label class="text-sm text-gray-600 dark:text-gray-400">h (paso de tiempo):</label>
+                    <input type="text" name="h" value="{{ h }}" class="w-full p-2 rounded border dark:bg-gray-700 dark:text-white" placeholder="Ej: 1">
+                </div>
+                <div>
+                    <label class="text-sm text-gray-600 dark:text-gray-400">t_start (inicio):</label>
+                    <input type="text" name="t_start" value="{{ t_start }}" class="w-full p-2 rounded border dark:bg-gray-700 dark:text-white" placeholder="Ej: 0">
+                </div>
+                <div>
+                    <label class="text-sm text-gray-600 dark:text-gray-400">t_end (fin):</label>
+                    <input type="text" name="t_end" value="{{ t_end }}" class="w-full p-2 rounded border dark:bg-gray-700 dark:text-white" placeholder="Ej: 24">
+                </div>
+            </div>
+            {% if error %}
+                <p class="text-red-500 mt-2 dark:text-red-400">{{ error }}</p>
+            {% endif %}
+            <div class="grid grid-cols-2 gap-2 mt-4">
+                <button type="submit" class="bg-indigo-500 text-white p-2 rounded hover:bg-indigo-600 dark:bg-indigo-600 dark:hover:bg-indigo-700 flex items-center justify-center">
+                    <i data-lucide="play" class="w-4 h-4 mr-1"></i>
+                    Calcular
+                </button>
+                <button type="button" id="clear-button" class="bg-gray-500 text-white p-2 rounded hover:bg-gray-600 dark:bg-gray-600 dark:hover:bg-gray-700 flex items-center justify-center">
+                    <i data-lucide="trash-2" class="w-4 h-4 mr-1"></i>
+                    Limpiar
+                </button>
+            </div>
+        </form>
+        <h2 class="text-lg font-bold mb-2 dark:text-white flex items-center">
+            <i data-lucide="arrow-right" class="w-4 h-4 mr-2 text-indigo-500 dark:text-indigo-400"></i>
+            Resultado
+        </h2>
+        <div class="p-4 bg-gray-50 border border-gray-200 rounded min-h-16 flex items-center dark:bg-gray-700 dark:border-gray-600">
+            <span class="dark:text-gray-300 flex-grow" id="result-text">
+                {% if result %}
+                    $$ {{ result|safe }} $$
+                {% else %}
+                    El resultado aparecerá aquí
+                {% endif %}
+            </span>
+            {% if result %}
+                <button id="copy-button" class="ml-auto p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200" title="Copiar al portapapeles">
+                    <i data-lucide="copy" class="w-4 h-4 text-gray-500 dark:text-gray-400"></i>
+                </button>
+            {% endif %}
+        </div>
+        <!-- Detalles del cálculo -->
+        {% if steps %}
+        <div class="mt-6">
+            <h2 class="text-lg font-bold mb-2 dark:text-white flex items-center">
+                <i data-lucide="settings" class="w-4 h-4 mr-2 text-indigo-500 dark:text-indigo-400"></i>
+                Detalles del cálculo
+            </h2>
+            <div class="p-4 bg-gray-50 border border-gray-200 rounded dark:bg-gray-700 dark:border-gray-600">
+                <!-- Paso 1: Ecuación ingresada -->
+                <div class="p-3 mb-2 rounded bg-white dark:bg-gray-800">
+                    <p class="font-medium mb-2 dark:text-gray-300">Paso 1: Ecuación ingresada</p>
+                    {% for step in steps.step1 %}
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">\( {{ step|safe }} \)</p>
+                    {% endfor %}
+                </div>
+                <!-- Paso 2: Tipo de ecuación -->
+                {% if steps.step2 %}
+                <div class="p-3 mb-2 rounded bg-white dark:bg-gray-800">
+                    <p class="font-medium mb-2 dark:text-gray-300">Paso 2: Tipo de ecuación</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">\( {{ steps.step2|safe }} \)</p>
+                </div>
+                {% endif %}
+                <!-- Paso 3: Método utilizado -->
+                <div class="p-3 mb-2 rounded bg-white dark:bg-gray-800">
+                    <p class="font-medium mb-2 dark:text-gray-300">Paso 3: Método utilizado</p>
+                    {% for step in steps.step3 %}
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">\( {{ step|safe }} \)</p>
+                    {% endfor %}
+                </div>
+                <!-- Paso 4: Resolución paso a paso -->
+                <div class="p-3 mb-2 rounded bg-white dark:bg-gray-800">
+                    <p class="font-medium mb-2 dark:text-gray-300">Paso 4: Resolución paso a paso</p>
+                    {% for step in steps.step4 %}
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">\( {{ step|safe }} \)</p>
+                    {% endfor %}
+                </div>
+                <!-- Paso 5: Solución final -->
+                {% if steps.step5 %}
+                <div class="p-3 rounded bg-white dark:bg-gray-800">
+                    <p class="font-medium mb-2 dark:text-gray-300">Paso 5: Solución final</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">\( {{ steps.step5|safe }} \)</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

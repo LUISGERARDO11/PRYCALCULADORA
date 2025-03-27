@@ -5,7 +5,8 @@ from sympy import lambdify, symbols
 import sympy as sp
 from sympy.parsing.sympy_parser import parse_expr, standard_transformations, implicit_multiplication_application, convert_xor
 from .calculations.laplace import preprocess_input, direct_laplace, inverse_laplace
-from .calculations.differential_equation import solve_differential_equation  # Nueva importación
+from .calculations.differential_equation import solve_differential_equation
+from .calculations.rk4 import solve_with_rk4  # Nueva importación para RK4
 
 def calculator(request):
     context = {
@@ -52,7 +53,7 @@ def calculator(request):
                     result, steps = solve_differential_equation(input_function)
                     context['result'] = result
                     context['steps'] = steps
-                    context['plot_data'] = None  # No generamos gráfica para ecuaciones diferenciales por ahora
+                    context['plot_data'] = None  # No generamos gráfica para ecuaciones diferenciales
                 else:
                     # Preprocesar la entrada
                     processed_input = preprocess_input(input_function)
@@ -199,3 +200,64 @@ def graph(request):
                 context['error'] = f'Error al graficar: {str(e)}'
     
     return render(request, 'laplace_calculator/graph.html', context)
+
+def rk4(request):
+    """
+    Vista para resolver ecuaciones diferenciales usando el método RK4.
+    """
+    context = {
+        'result': '',
+        'steps': None,
+        'error': '',
+        'mode': 'rk4',
+        'r': 0.0498,  # Ajustado según MATLAB
+        'A': 10.23,   # Ajustado según MATLAB
+        'T': 12,
+        'phi': 9.51,  # Ajustado según MATLAB
+        'P0': 43.64,
+        'h': 1,
+        't_start': 0,
+        't_end': 24,
+    }
+    
+    if request.method == 'POST':
+        try:
+            r = float(request.POST.get('r', 0.0498))
+            A = float(request.POST.get('A', 10.23))
+            T = float(request.POST.get('T', 12))
+            phi = float(request.POST.get('phi', 9.51))
+            P0 = float(request.POST.get('P0', 43.64))
+            h = float(request.POST.get('h', 1))
+            t_start = float(request.POST.get('t_start', 0))
+            t_end = float(request.POST.get('t_end', 24))
+        except ValueError as e:
+            context['error'] = 'Por favor, ingrese valores numéricos válidos para los parámetros.'
+            return render(request, 'laplace_calculator/rk4.html', context)
+
+        context['r'] = r
+        context['A'] = A
+        context['T'] = T
+        context['phi'] = phi
+        context['P0'] = P0
+        context['h'] = h
+        context['t_start'] = t_start
+        context['t_end'] = t_end
+
+        if h <= 0:
+            context['error'] = 'El paso de tiempo (h) debe ser mayor que 0.'
+        elif t_end <= t_start:
+            context['error'] = 'El tiempo final debe ser mayor que el tiempo inicial.'
+        elif T == 0:
+            context['error'] = 'El período (T) no puede ser 0.'
+        else:
+            try:
+                P_values, t_values, steps, quarterly_values, total_2025 = solve_with_rk4(r, A, T, phi, P0, t_start, t_end, h)
+                if P_values is None:
+                    context['error'] = 'Error al resolver la ecuación con RK4.'
+                else:
+                    context['result'] = f"\\text{{Demanda total estimada para 2025: }} {total_2025:.2f} \\text{{ unidades}}"
+                    context['steps'] = steps
+            except Exception as e:
+                context['error'] = f'Error al resolver con RK4: {str(e)}'
+    
+    return render(request, 'laplace_calculator/rk4.html', context)

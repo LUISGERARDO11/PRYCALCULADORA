@@ -43,6 +43,7 @@
             <div class="font-bold text-xl mr-6">LaplaceCalc</div>
             <a href="{% url 'laplace_calculator:calculator' %}" class="px-3 py-2 rounded-md hover:bg-indigo-700 dark:hover:bg-gray-700 {% if request.path == '/calculator/' %}bg-indigo-700 dark:bg-gray-700{% endif %}">Calculadora</a>
             <a href="{% url 'laplace_calculator:graph' %}" class="px-3 py-2 rounded-md hover:bg-indigo-700 dark:hover:bg-gray-700 {% if request.path == '/graph/' %}bg-indigo-700 dark:bg-gray-700{% endif %}">Gráficas</a>
+            <a href="{% url 'laplace_calculator:rk4' %}" class="px-3 py-2 rounded-md hover:bg-indigo-700 dark:hover:bg-gray-700 {% if request.path == '/rk4/' %}bg-indigo-700 dark:bg-gray-700{% endif %}">Predicción con RK4</a>
             <button id="dark-mode-toggle" class="ml-auto p-2 rounded-full hover:bg-indigo-700 dark:hover:bg-gray-700">
                 <span id="dark-mode-icon">🌙</span>
             </button>
