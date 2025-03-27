@@ -7,7 +7,13 @@
             <i data-lucide="calculator" class="w-4 h-4 mr-2 text-indigo-500 dark:text-indigo-400"></i>
             Función de entrada
         </h2>
-        <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Ejemplo: 2t + 3e^(-t), sin(t), cos(2t). Use 'e^' para exponenciales o 1/(s-2) para inversa.</p>
+        <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">
+            {% if calculation_type == 'diferencial' %}
+                Ejemplo: y' - 2*y = 0, y'' + y = 0. Use y' para la primera derivada y y'' para la segunda.
+            {% else %}
+                Ejemplo: 2t + 3e^(-t), sin(t), cos(2t). Use 'e^' para exponenciales o 1/(s-2) para inversa.
+            {% endif %}
+        </p>
         <form method="post" id="calculator-form" class="mb-6">
             {% csrf_token %}
             <div class="mb-4">
@@ -18,6 +24,8 @@
                                 Calcular Transformada Directa
                             {% elif calculation_type == 'inversa' %}
                                 Calcular Transformada Inversa
+                            {% elif calculation_type == 'diferencial' %}
+                                Resolver Ecuación Diferencial
                             {% else %}
                                 Calcular Transformada Directa
                             {% endif %}
@@ -31,12 +39,21 @@
                         <div class="p-3 hover:bg-gray-100 cursor-pointer dark:hover:bg-gray-700 {% if calculation_type == 'inversa' %}bg-gray-100 dark:bg-gray-700{% endif %}" data-value="inversa">
                             Calcular Transformada Inversa
                         </div>
+                        <div class="p-3 hover:bg-gray-100 cursor-pointer dark:hover:bg-gray-700 {% if calculation_type == 'diferencial' %}bg-gray-100 dark:bg-gray-700{% endif %}" data-value="diferencial">
+                            Resolver Ecuación Diferencial
+                        </div>
                     </div>
                     <input type="hidden" name="calculation_type" id="calculation-type" value="{{ calculation_type|default:'directa' }}">
                 </div>
             </div>
             <div class="flex rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700">
-                <span class="px-3 py-2 bg-gray-100 border-r border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-400">f(t) =</span>
+                <span class="px-3 py-2 bg-gray-100 border-r border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-400">
+                    {% if calculation_type == 'diferencial' %}
+                        Ecuación:
+                    {% else %}
+                        f(t) =
+                    {% endif %}
+                </span>
                 <input type="text" name="function" value="{{ input_function }}" class="flex-grow p-2 outline-none dark:bg-gray-700 dark:text-white" placeholder="Ej: 2t + 3e^(-t)" id="function-input">
             </div>
             {% if error %}
@@ -133,6 +150,26 @@
     </div>
 
     <!-- Panel derecho (Gráfica) -->
-    {% include 'laplace_calculator/graph_content.html' %}
+    <div class="w-1/2">
+        {% if plot_data %}
+            {% include 'laplace_calculator/graph_content.html' %}
+        {% elif calculation_type == 'diferencial' %}
+            <div class="bg-white rounded-lg shadow-md border border-gray-200 p-4 dark:bg-gray-800 dark:border-gray-700">
+                <h2 class="text-lg font-bold mb-2 dark:text-white flex items-center">
+                    <i data-lucide="bar-chart-2" class="w-4 h-4 mr-2 text-indigo-500 dark:text-indigo-400"></i>
+                    Gráfica
+                </h2>
+                <p class="text-gray-600 dark:text-gray-400">Las gráficas no están disponibles para ecuaciones diferenciales. Para graficar, proporcione condiciones iniciales o cambie al modo de transformadas.</p>
+            </div>
+        {% else %}
+            <div class="bg-white rounded-lg shadow-md border border-gray-200 p-4 dark:bg-gray-800 dark:border-gray-700">
+                <h2 class="text-lg font-bold mb-2 dark:text-white flex items-center">
+                    <i data-lucide="bar-chart-2" class="w-4 h-4 mr-2 text-indigo-500 dark:text-indigo-400"></i>
+                    Gráfica
+                </h2>
+                <p class="text-gray-600 dark:text-gray-400">La gráfica aparecerá aquí después de calcular.</p>
+            </div>
+        {% endif %}
+    </div>
 </div>
 {% endblock %}

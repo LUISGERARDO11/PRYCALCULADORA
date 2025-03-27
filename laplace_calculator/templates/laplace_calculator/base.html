@@ -57,6 +57,8 @@
                         Calcular Transformada Directa
                     {% elif calculation_type == 'inversa' %}
                         Calcular Transformada Inversa
+                    {% elif calculation_type == 'diferencial' %}
+                        Resolver Ecuación Diferencial
                     {% else %}
                         Calcular Transformada Directa
                     {% endif %}
@@ -69,6 +71,9 @@
                 </div>
                 <div class="p-3 hover:bg-gray-100 cursor-pointer dark:hover:bg-gray-700 {% if calculation_type == 'inversa' %}bg-gray-100 dark:bg-gray-700{% endif %}" data-value="inversa">
                     Calcular Transformada Inversa
+                </div>
+                <div class="p-3 hover:bg-gray-100 cursor-pointer dark:hover:bg-gray-700 {% if calculation_type == 'diferencial' %}bg-gray-100 dark:bg-gray-700{% endif %}" data-value="diferencial">
+                    Resolver Ecuación Diferencial
                 </div>
             </div>
         </div>

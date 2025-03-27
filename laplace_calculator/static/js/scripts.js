@@ -103,6 +103,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 graphExampleButton.textContent = 'Ejemplo: 1/(s-2)';
                 graphExampleButton.onclick = () => { graphFunctionInput.value = '1/(s-2)'; };
             }
+        } else if (calcType === 'diferencial') {
+            if (functionInput) {
+                functionInput.placeholder = 'Ej: y\' - 2*y = 0';
+                exampleButton.textContent = 'Ejemplo: y\' - 2*y = 0';
+                exampleButton.onclick = () => { functionInput.value = 'y\' - 2*y = 0'; };
+            }
+            if (graphFunctionInput) {
+                graphFunctionInput.placeholder = 'Ej: y\' - 2*y = 0';
+                graphExampleButton.textContent = 'Ejemplo: y\' - 2*y = 0';
+                graphExampleButton.onclick = () => { graphFunctionInput.value = 'y\' - 2*y = 0'; };
+            }
         } else {
             if (functionInput) {
                 functionInput.placeholder = 'Ej: 2t + 3e^(-t)';
@@ -148,7 +159,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Ejemplo en modo gráfico
     graphExampleButton?.addEventListener('click', () => {
         const calcType = graphCalculationTypeInput?.value || 'directa';
-        graphFunctionInput.value = calcType === 'inversa' ? '1/(s-2)' : '2t + 3e^(-t)';
+        graphFunctionInput.value = calcType === 'inversa' ? '1/(s-2)' : calcType === 'diferencial' ? 'y\' - 2*y = 0' : '2t + 3e^(-t)';
     });
 
     // Switches para mostrar u ocultar f(t) y F(s) (simulado)
